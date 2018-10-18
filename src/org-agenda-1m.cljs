@@ -3,6 +3,7 @@
 (require '[clojure.string :as string])
 (require '[goog.labs.format.csv :as csv])
 (require '[goog.string.format :as format])
+(require '[planck.core :as core])
 (require '[planck.shell :as shell])
 (require '[planck.from.io.aviso.ansi :as ansi])
 
@@ -10,21 +11,7 @@
 
 (def emacs-path "/usr/local/bin/emacs")
 
-(def notes-path "~/Dropbox/org/notes.org")
-
-(def args
-  (->> ['(require (quote org))
-        '(package-initialize)
-        '(require (quote org-agenda))
-        `(~'org-batch-agenda-csv "a"
-          ~'org-agenda-span ~'(quote day)
-          ~'org-agenda-files (~'list ~notes-path)
-          ~'org-agenda-skip-deadline-if-done ~'t
-          ~'org-agenda-skip-deadline-prewarning-if-scheduled ~'(quote pre-scheduled)
-          ~'org-agenda-skip-scheduled-if-deadline-is-shown ~'t)]
-       (map str)
-       (interleave (repeat "--eval"))))
-
+(def org-agenda-script-path "/Users/zane/projects/bitbar-plugins/resources/org-agenda.el")
 
 (def org-csv-keys
   [:category :head :type :todo :tags :date :time :extra :priority-1 :priority-n])
@@ -55,11 +42,13 @@
 
 (defn bitbar-line
   [s params]
-  (str s (when (seq params)
-           (reduce-kv (fn [param-str param param-value]
-                        (str param-str " " param "=" param-value))
-                      "|"
-                      params))))
+  (str s
+       (when (seq params)
+         (reduce-kv (fn [param-str param param-value]
+                      (str param-str " " param "=" param-value))
+                    "|"
+                    params))
+       "\n"))
 
 (defn parse-org-csv
   [csv]
@@ -67,36 +56,33 @@
        (map #(map vector org-csv-keys %))
        (map #(into {} %))))
 
+(defn org-batch-agenda
+  [emacs-path]
+  (shell/sh emacs-path "-batch" "--script" org-agenda-script-path))
+
 (defn emacs-batch
   []
-  (let [{:keys [out exit]} (apply shell/sh emacs-path "-batch" args)]
-    (if-not (zero? exit)
-      (println "Bad exit code" exit))
+  (let [{:keys [out err exit] :as result} (org-batch-agenda emacs-path)]
+    (when-not (zero? exit)
+      (println err)
+      (flush)
+      (throw (ex-info "Bad exit code" result)))
     (let [tasks (parse-org-csv out)
           {todo "TODO", done "DONE"} (group-by :todo tasks)
           {scheduled false, deadline true} (group-by deadline? todo)]
-      (println
-       (bitbar-line
-        (str (count todo)
-             (let [deadline-count (count deadline)]
-               (when-not (zero? deadline-count)
-                 (str "(" deadline-count ")"))))
-        {"image" icon}))
-      (println "---")
-      (println
-       (bitbar-line
-        (str (count todo)
-             (let [deadline-count (count deadline)]
-               (when-not (zero? deadline-count)
-                 (str "(" deadline-count ")"))))
-        {"image" icon}))
+      (print (bitbar-line
+              (str (count todo)
+                   (let [deadline-count (count deadline)]
+                     (when-not (zero? deadline-count)
+                       (str "(" deadline-count ")"))))
+              {"image" icon}))
+      (print "---\n")
       (doseq [{:keys [type todo head extra] :as task} tasks]
-        (println
-         (bitbar-line (string/join " " [(.padStart extra 12 "_")
-                                        (color-str todo (todo-color todo))
-                                        (color-str head (head-color task))])
-                      {"font" "Menlo"
-                       "size" 12
-                       "length" 100}))))))
+        (print (bitbar-line (string/join " " [(.padStart extra 12 "_")
+                                              (color-str todo (todo-color todo))
+                                              (color-str head (head-color task))])
+                            {"font" "Menlo"
+                             "size" 12
+                             "length" 100}))))))
 
 (emacs-batch)
