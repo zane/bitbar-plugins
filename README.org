@@ -5,8 +5,8 @@ Scripts that can be used as [[https://github.com/matryer/bitbar][BitBar]] plugin
 ** Installation
 
    1. [[https://github.com/matryer/bitbar#get-started][Download and install the latest version of BitBar]].
-   2. Clone this repository.
-   3. Change the BitBar plugin folder to be the =src= directory within this repository.
+   2. [[https://help.github.com/articles/cloning-a-repository/][Clone this repository]].
+   3. Change the BitBar plugin folder to the =src= directory within your cloned copy of this repository.
 
 ** Development
 
