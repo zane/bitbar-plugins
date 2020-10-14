@@ -32,9 +32,14 @@
   [s]
   (LocalDate/parse s))
 
+(defn things-applescript
+  []
+  (let [things-script "/Users/zane/projects/bitbar-plugins/resources/things.scpt"]
+    (shell/sh "osascript" things-script)))
+
 (defn tasks
   []
-  (let [{:keys [exit out] :as result} (shell/sh "osascript" "/Users/zane/Documents/BitBar/resources/things.scpt")]
+  (let [        {:keys [exit out] :as result} (things-applescript)]
     (if-not (zero? exit)
       (throw (ex-info "AppleScript returned a non-zero error code." result))
       (let [parse-dates (fn [m]
