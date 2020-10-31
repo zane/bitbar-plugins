@@ -1,13 +1,18 @@
 #!/usr/local/bin/bb
 
-(import '[java.time LocalDate])
+(import '[java.time LocalDateTime])
 (import '[java.time ZoneId])
+(import '[java.time.temporal ChronoUnit])
 
-(def election-day (LocalDate/of 2020 11 3))
+(def date (LocalDateTime/of 2020 11 1 0 0))
 
 (def est (ZoneId/of "America/New_York"))
 
-(let [days (.. (LocalDate/now est)
-               (until election-day)
-               (getDays))]
-  (println (str days " days")))
+(let [days (.. (LocalDateTime/now est)
+               (until date ChronoUnit/DAYS))]
+  (if (> days 0)
+    (println (str days " days"))
+    (let [hours (.. (LocalDateTime/now est)
+                    (until date ChronoUnit/HOURS))]
+      (when (> hours 0)
+        (println (str hours " hours"))))))
