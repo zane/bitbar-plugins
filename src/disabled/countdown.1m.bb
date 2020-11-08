@@ -4,7 +4,7 @@
 (import '[java.time ZoneId])
 (import '[java.time.temporal ChronoUnit])
 
-(def date (LocalDateTime/of 2020 11 3 0 0))
+(def date (LocalDateTime/of 2021 1 5 0 0))
 
 (def est (ZoneId/of "America/New_York"))
 
