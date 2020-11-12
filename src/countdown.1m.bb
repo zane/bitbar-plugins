@@ -1,14 +1,11 @@
 #!/usr/local/bin/bb
 
 (import '[java.time LocalDateTime])
-(import '[java.time ZoneId])
 (import '[java.time.temporal ChronoUnit])
 
 (def date (LocalDateTime/of 2021 1 5 0 0))
 
-(def est (ZoneId/of "America/New_York"))
-
-(let [now (LocalDateTime/now est)
+(let [now (LocalDateTime/now)
       hours (.until now date ChronoUnit/HOURS)
       days (cond-> (.until now date ChronoUnit/DAYS)
              (> hours 0) (inc))]
