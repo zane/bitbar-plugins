@@ -88,7 +88,9 @@
                          (:name task))
                     (assoc {:href (show-url (:id task))}
                            :color
-                           (if (overdue? task) "red" "grey")))))
+                           (cond (overdue? task) "red"
+                                 (open? task) "white"
+                                 :else "#333333")))))
 
 (when-let [tasks (tasks)]
   (when-let [first-task (some->> tasks
