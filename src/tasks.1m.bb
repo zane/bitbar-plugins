@@ -16,7 +16,7 @@
 
 (defn complete?
   [todo]
-  (boolean (:completion todo)))
+  (= :completed (:status todo)))
 
 (defn overdue?
   [todo]
@@ -48,7 +48,8 @@
                                   m
                                   #{:due :completion}))]
         (into []
-              (comp (map parse-dates))
+              (comp (map parse-dates)
+                    (map #(update % :status keyword)))
               (json/parse-string out true))))))
 
 (defn show-url
@@ -63,6 +64,7 @@
         :else (compare x y)))
 
 (def ballot-box-with-check "☑")
+(def ballot-box-with-x "☒")
 (def ballot-box "☐")
 
 (defn bitbar-task-header
@@ -72,16 +74,19 @@
                  (overdue? task) (assoc :color "red"))))
 
 (defn bitbar-task-line
-  [task]
-  (str (bitbar-line (str (if (complete? task)
-                           ballot-box-with-check
-                           ballot-box)
+  [{:keys [status] :as task}]
+  (str (bitbar-line (str (case status
+                           :completed ballot-box-with-check
+                           :canceled ballot-box-with-x
+                           :open ballot-box)
                          " "
                          (:name task))
                     (if (complete? task)
                       {}
                       (cond-> {:href (show-url (:id task))}
-                        (overdue? task) (assoc :color "red"))))))
+                        (and (not (complete? task))
+                             (overdue? task))
+                        (assoc :color "red"))))))
 
 (when-let [tasks (tasks)]
   (when-let [first-task (some->> tasks

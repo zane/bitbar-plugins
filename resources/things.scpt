@@ -15,7 +15,7 @@ tell application "Things3"
 
     set |records| to {}
     repeat with todo in |todos|
-        set |record| to {|id|: id of todo, |name|: name of todo}
+        set |record| to {|id|: id of todo, |name|: name of todo, |status|: status of todo as string}
         if due date of todo is not missing value
             set |record| to |record| & {|due|: my formatDate(due date of todo)}
         end
