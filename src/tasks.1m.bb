@@ -14,14 +14,19 @@
                               (interpose " ")
                               (apply str)))))))
 
+(defn open?
+  [todo]
+  (= :open (:status todo)))
+
 (defn complete?
   [todo]
   (= :completed (:status todo)))
 
 (defn overdue?
   [todo]
-  (when-let [due-date (:due todo)]
-    (nat-int? (compare (LocalDate/now) due-date))))
+  (and (= :open (:status todo))
+       (when-let [due-date (:due todo)]
+         (nat-int? (compare (LocalDate/now) due-date)))))
 
 (defn update-some
   [m k f]
@@ -81,16 +86,13 @@
                            :open ballot-box)
                          " "
                          (:name task))
-                    (if (complete? task)
-                      {}
-                      (cond-> {:href (show-url (:id task))}
-                        (and (not (complete? task))
-                             (overdue? task))
-                        (assoc :color "red"))))))
+                    (assoc {:href (show-url (:id task))}
+                           :color
+                           (if (overdue? task) "red" "grey")))))
 
 (when-let [tasks (tasks)]
   (when-let [first-task (some->> tasks
-                                 (remove complete?)
+                                 (filter open?)
                                  (sort-by :due nils-last)
                                  (first))]
     (println (bitbar-task-header first-task))
