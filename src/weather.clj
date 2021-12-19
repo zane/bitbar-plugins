@@ -1,0 +1,97 @@
+(ns weather
+  (:require [babashka.curl :as curl]
+            [cheshire.core :as json]
+            [clojure.core.match :as match]
+            [clojure.java.io :as io]
+            [clojure.java.shell :as shell]
+            [io.zane.applescript :as applescript]
+            [io.zane.bitbar :as bitbar]
+            [io.zane.network :as network]
+            [io.zane.wifi :as wifi]))
+
+(def api-key "5b85b881806682e45c778588d5f27848")
+(def mode "json")
+(def units "imperial")
+
+(def openweather-url "https://api.openweathermap.org/data/2.5/weather")
+
+(defn round
+  [n]
+  (if (int? n)
+    n
+    (Math/round n)))
+
+(def location-js
+  (delay
+    (.getPath (io/resource "location.js"))))
+
+(defn location
+  []
+  (let [s (match/match (applescript/run-js @location-js)
+            {:exit 0 :out out} out)
+        [_ lat-s long-s] (re-matches #"(-?\d+\.\d+), (-?\d+\.\d+)\n" s)
+        lat (Double/parseDouble lat-s)
+        long (Double/parseDouble long-s)]
+    [lat long]))
+
+(defn openweather
+  []
+  (let [[latitude longitude] (location)]
+    (curl/get openweather-url
+              {:query-params {"lat" latitude
+                              "lon" longitude
+                              "appid" api-key
+                              "mode" mode
+                              "units" units}})))
+
+(defn sfsymbol
+  [id]
+  ;; https://openweathermap.org/weather-conditions
+  (case id
+    "01d" "sun.max" ; clear sky
+    "02d" "cloud.sun" ; few clouds
+    "03d" "cloud" ; scattered clouds
+    "04d" "cloud" ; broken clouds
+    "09d" "cloud.heavyrain" ; shower rain
+    "10d" "cloud.rain" ; rain
+    "11d" "cloud.bolt.rain" ; thunderstorm
+    "13d" "cloud.snow" ; snow
+    "50d" "cloud.fog" ; mist
+
+    "01n" "moon.stars" ; clear sky
+    "02n" "cloud.moon" ; few clouds
+    "03n" "cloud" ; scattered clouds
+    "04n" "cloud" ; broken clouds
+    "09n" "cloud.heavyrain" ; shower rain
+    "10n" "cloud.rain" ; rain
+    "11n" "cloud.bolt.rain" ; thunderstorm
+    "13n" "cloud.snow" ; snow
+    "50n" "cloud.fog")) ; fog
+
+(defn temperature
+  []
+  (match/match (shell/sh "shortcuts" "run" "Temperature")
+    {:exit 0 :out out} out))
+
+(defn -main
+  []
+  (if-not (network/up?)
+    (do (println (bitbar/line "" {:sfimage (if (wifi/connected?)
+                                             "wifi.exclamationmark"
+                                             "wifi.slash")}))
+        (println bitbar/separator)
+        (println (bitbar/line "Refresh" {:sfimage "arrow.clockwise"
+                                         :terminal false
+                                         :refresh true})))
+    (let [weather (-> (openweather)
+                      (:body)
+                      (json/parse-string true))
+          temp (-> weather (get-in [:main :feels_like]) (round))
+          feels-like (-> weather (get-in [:main :feels_like]) (round))
+          icon  (-> weather (get-in [:weather 0 :icon]) (sfsymbol))
+          min-temp (-> weather (get-in [:main :temp_min]) (round))
+          max-temp (-> weather (get-in [:main :temp_max]) (round))]
+      (println (bitbar/line (str feels-like "°") {:sfimage icon}))
+      (println bitbar/separator)
+      (println (bitbar/line (str temp "° (" min-temp "-" max-temp "°)") {:sfimage "thermometer"}))))
+  (shutdown-agents))

@@ -1,11 +1,10 @@
 (ns tasks
   (:import [java.time LocalDate]
            [java.time Instant]
-           [java.time ZoneOffset]
-           [java.util Date])
+           [java.time ZoneOffset])
   (:require [cheshire.core :as json]
             [clojure.java.io :as io]
-            [clojure.java.shell :as sh]
+            [io.zane.app :as app]
             [io.zane.applescript :as applescript]
             [io.zane.bitbar :as bitbar]
             [io.zane.string :as zane.string]))
@@ -41,8 +40,7 @@
 
 (defn tasks
   []
-  (let [parse-date (fn [s] (-> s (Instant/parse) (Date/from)))
-        {:keys [err]} (applescript/run-js @things-js)]
+  (let [{:keys [err]} (applescript/run-js @things-js)]
     (map (fn [todo]
            (-> todo
                (update-some :dueDate local-date)
@@ -82,13 +80,20 @@
 
 (defn -main
   []
-  (if-let [tasks (seq (tasks))]
-    (when-let [first-task (some->> tasks
-                                   (filter open?)
-                                   (sort-by :due nils-last)
-                                   (first))]
-      (println (header-line first-task))
-      (println bitbar/separator)
-      (doseq [task tasks]
-        (println (task-line task))))
-    (print (bitbar/line "" {:sfimage sfimage}))))
+  (if-not (app/running? "Things3")
+    (do (println (bitbar/line "" {:sfimage "questionmark.app"}))
+        (println bitbar/separator)
+        (println (bitbar/line "Launch Things" {:bash "open"
+                                               :param0 "/Applications/Things3.app"
+                                               :terminal false
+                                               :refresh true})))
+    (when-let [tasks (seq (tasks))]
+      (when-let [first-task (some->> (seq tasks)
+                                     (filter open?)
+                                     (sort-by :due nils-last)
+                                     (first))]
+        (println (header-line first-task))
+        (println bitbar/separator)
+        (doseq [task tasks]
+          (println (task-line task))))))
+  (System/exit 0))

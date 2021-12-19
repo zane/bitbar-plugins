@@ -21,10 +21,15 @@
   [app-name menu-bar-item menu-item]
   (if-not (zoom?)
     false
-    (let [{:keys [err]} (applescript/run-js @has-menu-js app-name menu-bar-item menu-item)]
-      (case (string/trim err)
-        "true" true
-        "false" false))))
+    (try (let [{:keys [err]} (applescript/run-js @has-menu-js app-name menu-bar-item menu-item)]
+           (case (string/trim err)
+             "true" true
+             "false" false))
+         (catch Exception e
+           (let [{:keys [err]} (ex-info e)]
+             (if (string/includes? err "Can't get object.")
+               false
+               (throw e)))))))
 
 (defn audio-on?
   []
