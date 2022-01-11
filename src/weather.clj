@@ -27,12 +27,10 @@
 
 (defn location
   []
-  (let [s (match/match (applescript/run-js @location-js)
-            {:exit 0 :out out} out)
-        [_ lat-s long-s] (re-matches #"(-?\d+\.\d+), (-?\d+\.\d+)\n" s)
-        lat (Double/parseDouble lat-s)
-        long (Double/parseDouble long-s)]
-    [lat long]))
+  (applescript/run-cljs
+   '(-> (js/Application "Location Helper")
+        (.getLocationCoordinates)
+        (js->clj))))
 
 (defn openweather
   []
