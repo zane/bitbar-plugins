@@ -1,6 +1,5 @@
 (ns io.zane.applescript
-  (:require #?@(:bb [] :clj [[cljs.closure :as cljs]])
-            [clojure.edn :as edn]
+  (:require [clojure.edn :as edn]
             [clojure.java.shell :as shell]))
 
 (defn run
