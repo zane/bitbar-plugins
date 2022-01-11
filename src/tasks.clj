@@ -1,10 +1,7 @@
 (ns tasks
   (:import [java.time LocalDate]
-           [java.time Instant]
            [java.time ZoneOffset])
-  (:require [cheshire.core :as json]
-            [clojure.java.io :as io]
-            [io.zane.app :as app]
+  (:require [io.zane.app :as app]
             [io.zane.applescript :as applescript]
             [io.zane.bitbar :as bitbar]
             [io.zane.string :as zane.string]))
@@ -20,7 +17,7 @@
 (defn overdue?
   [todo]
   (and (= :open (:status todo))
-       (when-let [due-date (:dueDate todo)]
+       (when-let [due-date (:due-date todo)]
          (nat-int? (compare (LocalDate/now) due-date)))))
 
 (defn update-some
@@ -29,23 +26,24 @@
     (contains? m k) (update k f)))
 
 (defn local-date
-  [s]
+  [^java.util.Date d]
   (.toLocalDate
-   (.atZone (Instant/parse s)
+   (.atZone (.toInstant d)
             ZoneOffset/UTC)))
-
-(def things-js
-  (delay
-    (.getPath (io/resource "things.js"))))
 
 (defn tasks
   []
-  (let [{:keys [err]} (applescript/run-js @things-js)]
-    (map (fn [todo]
-           (-> todo
-               (update-some :dueDate local-date)
-               (update-some :status keyword)))
-         (json/parse-string err true))))
+  (->> (applescript/run-cljs
+        '(for [todo (-> (js/Application "Things") (.-lists) (.byName "Today") (.toDos))]
+           (->> {:id (.id todo)
+                 :name (.name todo)
+                 :due-date (.dueDate todo)
+                 :status (.status todo)}
+                (filter (comp some? val))
+                (into {}))))
+       (map #(-> %
+                 (update-some :due-date local-date)
+                 (update-some :status keyword)))))
 
 (defn show-url
   [id]
