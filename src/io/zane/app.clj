@@ -1,41 +1,23 @@
 (ns io.zane.app
-  (:import [java.io BufferedReader]
-           [java.io StringReader])
-  (:require [clojure.core.match :as match]
-            [clojure.java.shell :as shell]
-            [clojure.string :as string]))
-
-(defn ^:private processes
-  []
-  (let [[headers & rows] (->> (line-seq (BufferedReader. (StringReader. (:out (shell/sh "ps" "aux")))))
-                              (map #(string/split % #"\s+")))]
-    (map #(zipmap headers %)
-         rows)))
+  (:require [io.zane.applescript :as applescript]))
 
 (defn running?
   [app]
-  (->> (processes)
-       (some #(when-let [[_ _ actual-name]
-                           (re-matches #"/Applications/([^/]+/)?([^/]+)\.app(/.*)?"
-                                       (get % "COMMAND" ""))]
-                  (= app actual-name)))
-       (boolean)))
+  (applescript/run-cljs `(~'.running (~'js/Application ~app))))
 
 (defn open!
   [app]
-  (match/match (shell/sh "open" "-a" app)
-    {:exit 0} true))
+  (applescript/run-cljs `(~'.launch (~'js/Application ~app))))
 
 (defn quit!
   [app]
-  (match/match (shell/sh "oascript" "-e" (str "'quit app \"" app "\"'"))
-    {:exit 0} true))
+  (applescript/run-cljs `(~'.quit (~'js/Application ~app))))
+
 
 (comment
 
- (running? "Things3")
- (open! "Things3")
- (quit! "Things3")
- (running? "Deliveries")
+  (running? "Things3")
+  (open! "Things3")
+  (quit! "Things3")
 
- ,)
+  ,)
