@@ -13,7 +13,6 @@
   [app]
   (applescript/run-cljs `(~'.quit (~'js/Application ~app))))
 
-
 (comment
 
   (running? "Things3")
