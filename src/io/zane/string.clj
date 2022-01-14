@@ -9,7 +9,17 @@
 
 (defn conjunction?
   [s]
-  (contains? #{"for" "and" "nor" "but" "or" "yet" "so" "at" "the" "in"}
+  (contains? #{"about"
+               "and"
+               "at"
+               "but"
+               "for"
+               "in"
+               "nor"
+               "or"
+               "so"
+               "the"
+               "yet"}
              (string/lower-case s)))
 
 (defn last-word
