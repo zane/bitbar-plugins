@@ -47,5 +47,5 @@
       (println (bitbar/line "" {:sfimage "captions.bubble"}))
       (println bitbar/separator)
       (println (bitbar/line (str "WaniKani")))
-      (println (bitbar/line (str "Lessons: " lesson-count) {:href "https://www.wanikani.com/review"}))
-      (println (bitbar/line (str "Reviews: " review-count) {:href "https://www.wanikani.com/lesson"})))))
+      (println (bitbar/line (str "Lessons: " lesson-count) {:href "https://www.wanikani.com/lesson"}))
+      (println (bitbar/line (str "Reviews: " review-count) {:href "https://www.wanikani.com/review"})))))
