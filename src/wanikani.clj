@@ -18,9 +18,10 @@
 (defn wanikani-get
   [url query-params]
   (let [{:keys [body status] :as res}
-        (-> (client/get url {:headers {"Wanikani-Revision" 20170710
-                                       "Authorization" (str "Bearer " @api-token)}
-                             :query-params query-params})
+        (-> (client/get (str "https://api.wanikani.com/v2/" url)
+                        {:headers {"Wanikani-Revision" 20170710
+                                   "Authorization" (str "Bearer " @api-token)}
+                         :query-params query-params})
             (deref))]
     (if-not (<= 200 status 299)
       (throw (ex-info "HTTP request failed" (select-keys res [:body :status])))
@@ -28,21 +29,19 @@
 
 (defn lesson-count
   []
-  (-> (wanikani-get "https://api.wanikani.com/v2/assignments"
-                    {:immediately_available_for_lessons true})
+  (-> (wanikani-get "assignments" {:immediately_available_for_lessons true})
       (:total_count)))
 
 (defn review-count
   []
-  (-> (wanikani-get "https://api.wanikani.com/v2/assignments"
-                    {:immediately_available_for_review true})
+  (-> (wanikani-get "assignments" {:immediately_available_for_review true})
       (:total_count)))
 
 (defn -main
   []
   (let [lesson-count (lesson-count)
         review-count (review-count)]
-    (when (or (pos? lesson-count)
+    (when (or false #_(pos? lesson-count)
               (pos? review-count))
       (println (bitbar/line "" {:sfimage "captions.bubble"}))
       (println bitbar/separator)
