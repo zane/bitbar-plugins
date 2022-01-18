@@ -19,6 +19,7 @@
                "or"
                "so"
                "the"
+               "with"
                "yet"}
              (string/lower-case s)))
 
