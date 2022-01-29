@@ -23,7 +23,7 @@
     (-> (json/parse-string out true)
         (:response))))
 
-(defn maildir-messages
+(defn mu-messages
   []
   (let [parse-email (fn parse-email [[name _ email]]
                       (cond-> {}
@@ -72,7 +72,7 @@
 (comment
 
   (himalaya-messages)
-  (maildir-messages)
+  (mu-messages)
   (-main)
 
   ,)
