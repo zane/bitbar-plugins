@@ -64,7 +64,7 @@
       (let [messages (himalaya-messages)
             message-count (count messages)]
         (when (pos? message-count)
-          (println (bitbar/line message-count {:sfimage "envelope"}))
+          (println (bitbar/line "" {:sfimage "envelope"}))
           (println bitbar/separator)
           (doseq [message messages]
             (println (bitbar/line (format-message message) {:sfimage "envelope"}))))))))
