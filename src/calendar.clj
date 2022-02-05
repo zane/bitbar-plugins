@@ -154,7 +154,10 @@
             minutes (minutes-until start-time)
             time-str (time-str start-time)]
         (when (<= minutes max-minutes)
-          (println (bitbar/line (str (zane.string/truncate-words summary 25) " " time) {:sfimage "calendar"}))
+          (println (bitbar/line (str (zane.string/truncate-words summary 25)
+                                     (when (pos? time)
+                                       (str " " time)))
+                                {:sfimage "calendar"}))
           (println bitbar/separator)
           (println (when-let [urls (url-seq event)]
                      (->> urls
