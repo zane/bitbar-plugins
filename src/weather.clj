@@ -89,7 +89,8 @@
           icon  (-> weather (get-in [:weather 0 :icon]) (sfsymbol))
           min-temp (-> weather (get-in [:main :temp_min]) (round))
           max-temp (-> weather (get-in [:main :temp_max]) (round))]
-      (println (bitbar/line (str feels-like "°") {:sfimage icon}))
+      (println (bitbar/line "" {:sfimage icon}))
       (println bitbar/separator)
-      (println (bitbar/line (str temp "° (" min-temp "-" max-temp "°)") {:sfimage "thermometer"}))))
+      (println (bitbar/line (str temp "° (" min-temp "-" max-temp "°)") {:sfimage "thermometer"}))
+      (println (bitbar/line (str "Feels like " feels-like "°")))))
   (shutdown-agents))
