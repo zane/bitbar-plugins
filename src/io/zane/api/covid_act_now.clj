@@ -47,10 +47,6 @@
       {:status 200 :body body}
       (json/parse-string body true))))
 
-(defn test-positivity-rate
-  [m]
-  (get-in m [:metrics :testPositivityRatio]))
-
 (defn overall-risk-level
   [m]
   (get-in m [:riskLevels :overall]))
@@ -59,6 +55,21 @@
   [n]
   (str (format "%.1f" (* 100 n))
        "%"))
+
+(defn metric-type
+  [k]
+  (case k
+    :caseDensity :float
+    :infectionRate :float
+    :testPositivityRatio :percent
+    :string))
+
+(defn type-formatter
+  [k]
+  (case k
+    :percent format-percent
+    :float str
+    :string str))
 
 (defn format-risk-level
   [n]
@@ -70,18 +81,49 @@
     4 "Unknown"
     5 "Extremely high"))
 
+(defn risk-color
+  [n]
+  (case n
+    0 "green"
+    1 "gold"
+    2 "orange"
+    3 "red"
+    4 "black"
+    5 "maroon"))
+
+(defn metric-name
+  [k]
+  (case k
+    :caseDensity "Daily new cases"
+    :infectionRate "Infection rate"
+    :testPositivityRatio "Positive test rate"))
+
+(defn metric-line
+  [k summary]
+  (let [metric-name (metric-name k)
+        format (-> (metric-type k)
+                   (type-formatter))
+        value (get-in summary [:metrics k])
+        risk-color (-> (get-in summary [:riskLevels k])
+                       (risk-color))]
+    (bitbar/line (str ":circle.fill: " metric-name ": " (format value))
+                 {:sfcolor risk-color})))
+
 (defn -main
   [& _]
   (when (network/up?)
     (let [summary (single-cbsa-summary (get cbsa :ny-nj-pa) @api-key)
-          pos-rate (-> (test-positivity-rate summary)
-                       (format-percent))
-          risk (-> (overall-risk-level summary)
-                   (format-risk-level))]
+          overall-risk-level (overall-risk-level summary)
+          overall-risk-color (risk-color overall-risk-level)
+          risk (format-risk-level overall-risk-level )
+          url "https://covidactnow.org/us/metro/new-york-city-newark-jersey-city_ny-nj-pa/?s=28841761"]
       (println (bitbar/line "" {:sfimage "facemask"}))
       (println bitbar/separator)
-      (println (bitbar/line (str "Risk level: " risk)))
-      (println (bitbar/line (str "Positivity rate: " pos-rate))))))
+      (println (bitbar/line (str ":circle.fill: Risk level: " risk) {:href url :sfcolor overall-risk-color}))
+      (println bitbar/separator)
+      (doseq [line (map #(metric-line % summary)
+                        [:caseDensity :infectionRate :testPositivityRatio])]
+        (println line)))))
 
 (comment
 
@@ -89,8 +131,12 @@
 
   (-main)
 
-  (format-percent (test-positivity-rate (single-county-summary (:kings fips) @api-key)))
-  (format-percent (test-positivity-rate (single-cbsa-summary (:ny-nj-pa cbsa) @api-key)))
-  (format-percent (test-positivity-rate (single-cbsa-summary (:sf-bay-area cbsa) @api-key)))
+  (single-county-summary (:kings fips) @api-key)
+  (single-cbsa-summary (:ny-nj-pa cbsa) @api-key)
+
+  (let [summary (single-cbsa-summary (:ny-nj-pa cbsa) @api-key)]
+    (map #(metric-line % summary) [:caseDensity :infectionRate :testPositivityRatio]))
+
+  (single-cbsa-summary (:ny-nj-pa cbsa) @api-key)
 
   ,)
