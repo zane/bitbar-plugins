@@ -44,12 +44,13 @@
   (let [now (ZonedDateTime/now)
         period (Period/between (.toLocalDate now) (.toLocalDate zdt))
         duration (Duration/between now zdt)]
-    (str (when-not (or (.isNegative period)
-                       (.isNegative duration))
-           "in ")
-         (if-not (= Period/ZERO period)
-           (format-period period)
-           (format-duration duration)))))
+    (when (.isNegative period)
+      (str (when-not (or (.isNegative period)
+                         (.isNegative duration))
+             "in ")
+           (if-not (= Period/ZERO period)
+             (format-period period)
+             (format-duration duration))))))
 
 
 (comment
