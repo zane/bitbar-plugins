@@ -44,7 +44,7 @@
   (let [now (ZonedDateTime/now)
         period (Period/between (.toLocalDate now) (.toLocalDate zdt))
         duration (Duration/between now zdt)]
-    (when (.isNegative period)
+    (when-not (.isNegative period)
       (str (when-not (or (.isNegative period)
                          (.isNegative duration))
              "in ")

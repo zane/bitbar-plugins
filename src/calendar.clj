@@ -140,7 +140,7 @@
         (println (bitbar/line "Refresh" {:sfimage "arrow.clockwise"
                                          :terminal false
                                          :refresh true})))
-    (let [{:keys [api-key max-minutes] token :refresh-token :as state} (read-state)]
+    (let [{:keys [api-key max-minutes min-minutes] token :refresh-token :as state} (read-state)]
       (when-not token
         (let [oauth-code (oauth-code state)
               token (refresh-token oauth-code state)]
@@ -153,9 +153,9 @@
             time (time/to start-time)
             minutes (minutes-until start-time)
             time-str (time-str start-time)]
-        (when (<= minutes max-minutes)
+        (when (<= min-minutes minutes max-minutes)
           (println (bitbar/line (str (zane.string/truncate-words summary 25)
-                                     (when (pos? time)
+                                     (when-not (str/blank? time)
                                        (str " " time)))
                                 {:sfimage "calendar"}))
           (println bitbar/separator)
@@ -171,6 +171,5 @@
 (comment
 
   (-main)
-
 
   ,)
