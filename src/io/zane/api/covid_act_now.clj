@@ -47,6 +47,14 @@
       {:status 200 :body body}
       (json/parse-string body true))))
 
+(defn single-cbsa-timeseries
+  [cbsa api-key]
+  ;; https://apidocs.covidactnow.org/api#tag/CBSA-Data/paths/~1cbsa~1{cbsa_code}.timeseries.json?apiKey={apiKey}/get
+  (let [url (str   "https://api.covidactnow.org/v2/cbsa/" cbsa ".timeseries.json?apiKey=" api-key)]
+    (match/match (curl/get url {:throw false})
+      {:status 200 :body body}
+      (json/parse-string body true))))
+
 (defn overall-risk-level
   [m]
   (get-in m [:riskLevels :overall]))
@@ -133,6 +141,9 @@
 
   (single-county-summary (:kings fips) @api-key)
   (single-cbsa-summary (:ny-nj-pa cbsa) @api-key)
+  (single-cbsa-timeseries (:ny-nj-pa cbsa) @api-key)
+
+  (keys (single-cbsa-timeseries (:ny-nj-pa cbsa) @api-key))
 
   (let [summary (single-cbsa-summary (:ny-nj-pa cbsa) @api-key)]
     (map #(metric-line % summary) [:caseDensity :infectionRate :testPositivityRatio]))
