@@ -91,13 +91,14 @@
 
 (defn risk-color
   [n]
+  ;; https://covidactnow.org/covid-risk-levels-metrics
   (case n
-    0 "green"
-    1 "gold"
-    2 "orange"
-    3 "red"
+    0 "#00d474" ; "green"
+    1 "#ffc900" ; "yellow"
+    2 "#ff9600" ; "orange"
+    3 "#d9002c" ; "red"
     4 "black"
-    5 "maroon"))
+    5 "#790019")) ; "maroon"
 
 (defn metric-name
   [k]
