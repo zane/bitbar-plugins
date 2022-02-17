@@ -124,7 +124,7 @@
     (let [summary (single-cbsa-summary (get cbsa :ny-nj-pa) @api-key)
           overall-risk-level (overall-risk-level summary)
           overall-risk-color (risk-color overall-risk-level)
-          risk (format-risk-level overall-risk-level )
+          risk (format-risk-level overall-risk-level)
           url "https://covidactnow.org/us/metro/new-york-city-newark-jersey-city_ny-nj-pa/?s=28841761"]
       (println (bitbar/line "" {:sfimage "facemask"}))
       (println bitbar/separator)
