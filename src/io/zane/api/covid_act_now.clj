@@ -108,7 +108,7 @@
     :testPositivityRatio "Positive test rate"))
 
 (defn metric-line
-  [k summary]
+  [k summary url]
   (let [metric-name (metric-name k)
         format (-> (metric-type k)
                    (type-formatter))
@@ -116,7 +116,8 @@
         risk-color (-> (get-in summary [:riskLevels k])
                        (risk-color))]
     (bitbar/line (str ":circle.fill: " metric-name ": " (format value))
-                 {:sfcolor risk-color})))
+                 {:sfcolor risk-color
+                  :href url})))
 
 (defn -main
   [& _]
@@ -130,7 +131,7 @@
       (println bitbar/separator)
       (println (bitbar/line (str ":circle.fill: Risk level: " risk) {:href url :sfcolor overall-risk-color}))
       (println bitbar/separator)
-      (doseq [line (map #(metric-line % summary)
+      (doseq [line (map #(metric-line % summary url)
                         [:caseDensity :infectionRate :testPositivityRatio])]
         (println line)))))
 
