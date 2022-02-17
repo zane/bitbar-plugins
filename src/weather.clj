@@ -35,12 +35,14 @@
 (defn openweather
   []
   (let [[latitude longitude] (location)]
-    (curl/get openweather-url
-              {:query-params {"lat" latitude
-                              "lon" longitude
-                              "appid" api-key
-                              "mode" mode
-                              "units" units}})))
+    (match/match (curl/get openweather-url
+                           {:query-params {"lat" latitude
+                                           "lon" longitude
+                                           "appid" api-key
+                                           "mode" mode
+                                           "units" units}})
+      {:status 200 :body body}
+      (json/parse-string body true))))
 
 (defn sfsymbol
   [id]
@@ -81,9 +83,7 @@
         (println (bitbar/line "Refresh" {:sfimage "arrow.clockwise"
                                          :terminal false
                                          :refresh true})))
-    (let [weather (-> (openweather)
-                      (:body)
-                      (json/parse-string true))
+    (let [weather (openweather)
           temp (-> weather (get-in [:main :feels_like]) (round))
           feels-like (-> weather (get-in [:main :feels_like]) (round))
           icon  (-> weather (get-in [:weather 0 :icon]) (sfsymbol))
