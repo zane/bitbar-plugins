@@ -73,6 +73,11 @@
   (match/match (shell/sh "shortcuts" "run" "Temperature")
     {:exit 0 :out out} out))
 
+
+(defn format-temp
+  [n]
+  (str (round n) "°"))
+
 (defn -main
   []
   (if-not (network/up?)
@@ -84,13 +89,19 @@
                                          :terminal false
                                          :refresh true})))
     (let [weather (openweather)
-          temp (-> weather (get-in [:main :feels_like]) (round))
-          feels-like (-> weather (get-in [:main :feels_like]) (round))
+          temp (-> weather (get-in [:main :temp]) (format-temp))
+          feels-like (-> weather (get-in [:main :feels_like]) (format-temp))
           icon  (-> weather (get-in [:weather 0 :icon]) (sfsymbol))
-          min-temp (-> weather (get-in [:main :temp_min]) (round))
-          max-temp (-> weather (get-in [:main :temp_max]) (round))]
-      (println (bitbar/line "" {:sfimage icon}))
+          min-temp (-> weather (get-in [:main :temp_min]) (format-temp))
+          max-temp (-> weather (get-in [:main :temp_max]) (format-temp))]
+      (println (bitbar/line temp {:sfimage icon}))
       (println bitbar/separator)
-      (println (bitbar/line (str temp "° (" min-temp "-" max-temp "°)") {:sfimage "thermometer"}))
+      (println (bitbar/line (str temp " (" min-temp " - " max-temp ")") {:sfimage "thermometer"}))
       (println (bitbar/line (str "Feels like " feels-like "°")))))
   (shutdown-agents))
+
+(comment
+
+  (openweather)
+
+  ,)
