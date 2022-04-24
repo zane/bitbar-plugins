@@ -4,7 +4,7 @@
 
 (defn up?
   []
-  (match/match (shell/sh "ping" "-o" "apple.com")
+  (match/match (shell/sh "ping" "-ot" "1" "apple.com")
     {:exit 0} true
     :else false))
 
